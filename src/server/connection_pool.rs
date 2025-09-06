@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::Mutex;
+use log::{info, debug};
 
 #[derive(Debug, Clone)]
 pub struct TableConnection {
@@ -28,6 +29,7 @@ pub struct ConnectionPool {
 
 impl ConnectionPool {
     pub fn new() -> Self {
+        info!("Creating connection pool");
         Self {
             connections: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -37,11 +39,18 @@ impl ConnectionPool {
         let mut connections = self.connections.lock().await;
         let connection = TableConnection::new(table_id, address);
         connections.insert(table_id, connection);
+        
+        let total = connections.len();
+        debug!("Added connection for table {} from {} (total active: {})", table_id, address, total);
     }
     
     pub async fn remove_connection(&self, table_id: u8) {
         let mut connections = self.connections.lock().await;
-        connections.remove(&table_id);
+        if let Some(conn) = connections.remove(&table_id) {
+            let total = connections.len();
+            debug!("Removed connection for table {} from {} (total active: {})", 
+                   table_id, conn.address, total);
+        }
     }
     
     pub async fn get_connection(&self, table_id: u8) -> Option<TableConnection> {

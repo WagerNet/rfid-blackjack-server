@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use log::{info, warn};
 
 pub struct CardLookup {
     card_map: HashMap<u32, String>,
@@ -6,10 +7,12 @@ pub struct CardLookup {
 
 impl CardLookup {
     pub fn new() -> Self {
+        info!("Initializing card lookup table");
         let mut lookup = Self {
             card_map: HashMap::new(),
         };
         lookup.init_cards();
+        info!("Card lookup initialized with {} cards", lookup.card_map.len());
         lookup
     }
     
@@ -27,12 +30,17 @@ impl CardLookup {
     }
     
     pub fn get_card_value(&self, card_id: u32) -> String {
-        self.card_map.get(&card_id)
-            .cloned()
-            .unwrap_or_else(|| "Unknown".to_string())
+        match self.card_map.get(&card_id) {
+            Some(value) => value.clone(),
+            None => {
+                warn!("Unknown card ID: {}", card_id);
+                "Unknown".to_string()
+            }
+        }
     }
     
     pub fn add_card(&mut self, card_id: u32, value: String) {
+        info!("Adding custom card: {} -> {}", card_id, value);
         self.card_map.insert(card_id, value);
     }
 }

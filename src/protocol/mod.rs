@@ -1,3 +1,5 @@
+use log::warn;
+
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct CardData {
@@ -10,6 +12,7 @@ pub struct CardData {
 impl CardData {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, &'static str> {
         if bytes.len() != 10 {
+            warn!("Invalid card data length: {} bytes (expected 10)", bytes.len());
             return Err("Invalid data length");
         }
         
